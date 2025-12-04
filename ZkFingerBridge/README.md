@@ -12,10 +12,12 @@ A .NET Worker Service that periodically pulls attendance logs from a ZKTeco (ZKF
 
 ```json
 "ZkDevice": {
-  "IpAddress": "192.168.1.201",
+  "IpAddress": "auto",           // Set to "auto" for auto-discovery, or specific IP like "192.168.0.201"
   "Port": 4370,
   "MachineNumber": 1,
-  "CommPassword": null
+  "CommPassword": null,
+  "AutoDiscoverySubnet": "192.168.0",  // Subnet to scan when auto-discovery is enabled
+  "EnableAutoDiscovery": true          // Enable auto-discovery on startup
 },
 "HrApi": {
   "BaseUrl": "https://hr.example.com",
@@ -31,6 +33,19 @@ A .NET Worker Service that periodically pulls attendance logs from a ZKTeco (ZKF
   "StateFilePath": null
 }
 ```
+
+### Auto-Discovery Feature
+
+If your device has a **dynamic IP address (DHCP)**, you can enable auto-discovery:
+
+1. Set `"IpAddress": "auto"` in configuration
+2. Set `"AutoDiscoverySubnet"` to your network subnet (e.g., `"192.168.0"`)
+3. Set `"EnableAutoDiscovery": true`
+
+The application will scan the subnet on startup and automatically find the device on port 4370.
+
+**Note**: For production use, it's recommended to set a static IP on the device or use DHCP reservation in your router.
+
 
 Use `dotnet user-secrets` or environment variables for secrets:
 

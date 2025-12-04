@@ -8,7 +8,7 @@ public sealed class HrApiOptions
 
     [Required]
     [Url]
-    public string BaseUrl { get; set; } = "https://hr.example.com";
+    public string BaseUrl { get; set; } = "http://localhost:5000";
 
     [Required]
     public string AttendanceEndpoint { get; set; } = "/api/attendance";

@@ -25,6 +25,7 @@ builder.Services
 
 builder.Services.AddSingleton<IZkDeviceClient, ZkDeviceClient>();
 builder.Services.AddSingleton<IStateStore, FileStateStore>();
+builder.Services.AddSingleton<IDeviceDiscoveryService, DeviceDiscoveryService>();
 
 builder.Services.AddHttpClient<IHrApiClient, HrApiClient>((sp, client) =>
 {

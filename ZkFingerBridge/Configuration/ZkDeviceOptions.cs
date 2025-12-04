@@ -4,15 +4,27 @@ public sealed class ZkDeviceOptions
 {
     public const string SectionName = "ZkDevice";
 
-    public string IpAddress { get; set; } = "192.168.1.201";
+    /// <summary>
+    /// IP address of the device. Leave as "auto" to enable auto-discovery.
+    /// </summary>
+    public string IpAddress { get; set; } = "192.168.1.11";
 
-    public int Port { get; set; } = 4370;
+    public int Port { get; set; } = 8089;
 
     public int MachineNumber { get; set; } = 1;
 
     /// <summary>
     /// Optional communication password configured on the device.
     /// </summary>
-    public int? CommPassword { get; set; }
-        = null;
+    public int? CommPassword { get; set; } = null;
+
+    /// <summary>
+    /// Subnet to scan for auto-discovery (e.g., "192.168.0"). Only used when IpAddress is "auto".
+    /// </summary>
+    public string? AutoDiscoverySubnet { get; set; } = "192.168.0";
+
+    /// <summary>
+    /// Enable auto-discovery on startup if static IP fails
+    /// </summary>
+    public bool EnableAutoDiscovery { get; set; } = true;
 }

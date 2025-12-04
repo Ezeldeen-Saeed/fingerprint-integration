@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "Hp2gB85evFo=",
+  "success": true,
+  "projectFilePath": "E:\\Fingerprint integration\\ZkTest\\ZkTest.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\afvid\\.nuget\\packages\\microsoft.csharp\\4.7.0\\microsoft.csharp.4.7.0.nupkg.sha512"
+  ],
+  "logs": []
+}
