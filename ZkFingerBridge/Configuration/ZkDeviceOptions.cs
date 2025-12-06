@@ -27,4 +27,9 @@ public sealed class ZkDeviceOptions
     /// Enable auto-discovery on startup if static IP fails
     /// </summary>
     public bool EnableAutoDiscovery { get; set; } = true;
+
+    /// <summary>
+    /// Branch identifier for multi-branch deployments
+    /// </summary>
+    public string BranchId { get; set; } = "BR001";
 }
