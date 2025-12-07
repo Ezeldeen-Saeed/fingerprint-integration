@@ -285,3 +285,5 @@ public record AttendanceLogDto(
     int PunchType,
     int WorkCode
 );
+
+public record EmployeeDto(string EmployeeId, string Name, bool Enabled, int Privilege);
