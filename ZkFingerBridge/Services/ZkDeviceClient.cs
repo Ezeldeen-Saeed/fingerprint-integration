@@ -68,61 +68,6 @@ public sealed class ZkDeviceClient : IZkDeviceClient
         }, cancellationToken);
     }
 
-    public Task<IReadOnlyCollection<Employee>> ReadEmployeesAsync(CancellationToken cancellationToken)
-    {
-        return Task.Run(() =>
-        {
-            lock (_syncRoot)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                EnsureConnectedUnsafe();
-
-                var employees = new List<Employee>();
-                _logger.LogInformation("Reading employees from device {Machine} ({Ip}:{Port})", 
-                    _options.MachineNumber, _options.IpAddress, _options.Port);
-
-                _zkem.EnableDevice(_options.MachineNumber, false);
-                try
-                {
-                    if (!_zkem.ReadAllUserID(_options.MachineNumber))
-                    {
-                        var error = GetLastError();
-                        _logger.LogWarning("ReadAllUserID returned false (error {ErrorCode})", error);
-                        if (error != 0)
-                        {
-                            throw new InvalidOperationException($"ReadAllUserID failed with error {error}");
-                        }
-                    }
-
-                    string employeeId = string.Empty;
-                    string name = string.Empty;
-                    string password = string.Empty;
-                    int privilege = 0;
-                    bool enabled = false;
-
-                    while (_zkem.SSR_GetAllUserInfo(
-                        _options.MachineNumber,
-                        out employeeId,
-                        out name,
-                        out password,
-                        out privilege,
-                        out enabled))
-                    {
-                        cancellationToken.ThrowIfCancellationRequested();
-                        employees.Add(new Employee(employeeId, name, enabled, privilege));
-                    }
-
-                    _logger.LogInformation("Retrieved {Count} employee(s) from device", employees.Count);
-                    return (IReadOnlyCollection<Employee>)employees;
-                }
-                finally
-                {
-                    _zkem.EnableDevice(_options.MachineNumber, true);
-                }
-            }
-        }, cancellationToken);
-    }
-
     public Task ClearLogsAsync(CancellationToken cancellationToken)
     {
         return Task.Run(() =>

@@ -62,34 +62,6 @@ public sealed class HrApiClient : IHrApiClient
         }
     }
 
-    public async Task SyncEmployeesAsync(IReadOnlyCollection<Employee> employees, CancellationToken cancellationToken)
-    {
-        if (employees.Count == 0)
-        {
-            return;
-        }
-
-        var payload = employees.Select(e => new
-        {
-            employeeId = e.EmployeeId,
-            name = e.Name,
-            enabled = e.Enabled,
-            privilege = e.Privilege
-        }).ToArray();
-
-        _logger.LogInformation("Syncing {Count} employee(s) to HR API", payload.Length);
-
-        using var response = await _httpClient.PostAsJsonAsync("/api/employees/sync", payload, cancellationToken);
-
-        if (!response.IsSuccessStatusCode)
-        {
-            var body = await response.Content.ReadAsStringAsync(cancellationToken);
-            throw new InvalidOperationException($"HR API responded with {(int)response.StatusCode} - {response.ReasonPhrase}: {body}");
-        }
-
-        _logger.LogInformation("Successfully synced {Count} employee(s)", payload.Length);
-    }
-
     private static IEnumerable<IReadOnlyCollection<AttendanceLog>> Chunk(IReadOnlyCollection<AttendanceLog> source, int size)
     {
         if (size <= 0)

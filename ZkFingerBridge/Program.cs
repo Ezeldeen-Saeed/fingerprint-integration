@@ -65,16 +65,6 @@ builder.Services.AddQuartz(q =>
                 .RepeatForever())
             .StartNow(); // Start immediately
     });
-
-    // Employee sync job - runs daily at 2am and on startup
-    var employeeSyncJobKey = new JobKey("employee-sync-job");
-    q.AddJob<EmployeeSyncJob>(opts => opts.WithIdentity(employeeSyncJobKey));
-
-    q.AddTrigger(opts => opts
-        .ForJob(employeeSyncJobKey)
-        .WithIdentity("employee-sync-trigger")
-        .WithCronSchedule("0 0 2 * * ?")  // 2am daily
-        .StartNow());  // Also run immediately on startup
 });
 
 // Add Quartz hosted service
