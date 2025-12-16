@@ -1,12 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk.Worker">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>dotnet-ZkFingerBridge-0efc9c95-374b-4496-99dd-9ca55e18987d</UserSecretsId>
     <!-- Force 32-bit to match ZK SDK -->
     <PlatformTarget>x86</PlatformTarget>
+    <!-- Enable Windows Forms for setup wizard -->
+    <UseWindowsForms>true</UseWindowsForms>
   </PropertyGroup>
 
   <ItemGroup>
@@ -18,3 +20,4 @@
     <PackageReference Include="Quartz.Extensions.Hosting" Version="3.15.1" />
   </ItemGroup>
 </Project>
+

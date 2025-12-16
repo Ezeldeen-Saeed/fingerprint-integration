@@ -4,6 +4,49 @@ using ZkFingerBridge;
 using ZkFingerBridge.Configuration;
 using ZkFingerBridge.Jobs;
 using ZkFingerBridge.Services;
+using ZkFingerBridge.UI;
+
+// Check for --setup flag or if not configured
+var appSettingsPath = Path.Combine(AppContext.BaseDirectory, "appsettings.json");
+var forceSetup = args.Contains("--setup");
+var needsSetup = forceSetup || !SettingsSaver.IsConfigured(appSettingsPath);
+
+if (needsSetup)
+{
+    // Read current settings to get API URL
+    var tempBuilder = Host.CreateApplicationBuilder(args);
+    var hrApiOptions = tempBuilder.Configuration.GetSection(HrApiOptions.SectionName).Get<HrApiOptions>() 
+        ?? new HrApiOptions();
+
+    // Run the setup wizard
+    Application.EnableVisualStyles();
+    Application.SetCompatibleTextRenderingDefault(false);
+    
+    using var wizard = new SetupWizard(
+        hrApiOptions.BaseUrl, 
+        hrApiOptions.CompaniesEndpoint,
+        hrApiOptions.ApiKey);
+    
+    Application.Run(wizard);
+    
+    if (wizard.ConfigurationSaved)
+    {
+        // Save the selected company and branch to appsettings.json
+        SettingsSaver.SaveSettings(
+            appSettingsPath,
+            wizard.SelectedCompanyId,
+            wizard.SelectedCompanyName,
+            wizard.SelectedBranchId,
+            wizard.SelectedBranchName);
+        
+        Console.WriteLine($"✅ Configuration saved: {wizard.SelectedCompanyName} - {wizard.SelectedBranchName}");
+    }
+    else
+    {
+        Console.WriteLine("❌ Setup cancelled. Exiting...");
+        return;
+    }
+}
 
 var builder = Host.CreateApplicationBuilder(args);
 

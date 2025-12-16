@@ -22,7 +22,7 @@ public class SqliteLogQueue : ILogQueue
         db.Database.EnsureCreated();
     }
 
-    public async Task EnqueueAsync(IEnumerable<AttendanceLog> logs, string branchId, CancellationToken cancellationToken = default)
+    public async Task EnqueueAsync(IEnumerable<AttendanceLog> logs, int branchId, CancellationToken cancellationToken = default)
     {
         using var db = new LogQueueDbContext(_databasePath);
         

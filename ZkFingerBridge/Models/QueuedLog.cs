@@ -12,7 +12,7 @@ public class QueuedLog
     public int WorkCode { get; set; }
     
     // Queue metadata
-    public required string BranchId { get; set; }
+    public int BranchId { get; set; }
     public DateTime QueuedAt { get; set; }
     public int RetryCount { get; set; }
     public string? LastError { get; set; }

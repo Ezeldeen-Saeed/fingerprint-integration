@@ -7,7 +7,7 @@ public sealed class ZkDeviceOptions
     /// <summary>
     /// IP address of the device. Leave as "auto" to enable auto-discovery.
     /// </summary>
-    public string IpAddress { get; set; } = "192.168.1.11";
+    public string IpAddress { get; set; } = "auto";
 
     public int Port { get; set; } = 8089;
 
@@ -31,5 +31,10 @@ public sealed class ZkDeviceOptions
     /// <summary>
     /// Branch identifier for multi-branch deployments
     /// </summary>
-    public string BranchId { get; set; } = "BR001";
+    public int BranchId { get; set; } = 1;
+
+    /// <summary>
+    /// Branch name for display purposes (set by wizard)
+    /// </summary>
+    public string? BranchName { get; set; }
 }

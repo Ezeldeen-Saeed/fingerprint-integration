@@ -38,8 +38,7 @@ public class LogQueueDbContext : DbContext
                 .HasMaxLength(50);
             
             entity.Property(e => e.BranchId)
-                .IsRequired()
-                .HasMaxLength(50);
+                .IsRequired();
             
             entity.Property(e => e.LastError)
                 .HasMaxLength(500);
