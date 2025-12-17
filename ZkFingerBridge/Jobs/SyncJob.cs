@@ -168,12 +168,14 @@ public class SyncJob : IJob
             try
             {
                 // Convert QueuedLog (database entity) back to AttendanceLog (API model)
+                // Include BranchId so the log is sent to the correct branch
                 var attendanceLog = new AttendanceLog(
                     queuedLog.EmployeeId,
                     queuedLog.PunchTime,
                     queuedLog.VerifyMode,
                     queuedLog.PunchType,
-                    queuedLog.WorkCode
+                    queuedLog.WorkCode,
+                    queuedLog.BranchId  // Pass the stored BranchId for correct routing
                 );
 
                 // Try to send this single log to the API

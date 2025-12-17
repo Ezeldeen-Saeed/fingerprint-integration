@@ -50,10 +50,13 @@ public sealed class HrApiClient : IHrApiClient
             cancellationToken.ThrowIfCancellationRequested();
 
             // Build payload in Firstsoft.io PHP API format (single object, not array)
+            // Use log.BranchId if provided (for re-sending queued logs), otherwise use device config
+            var branchId = log.BranchId ?? _deviceOptions.BranchId;
+            
             var payload = new
             {
                 company_id = _options.CompanyId,
-                branch_id = _deviceOptions.BranchId,
+                branch_id = branchId,
                 employee_id = log.EmployeeId,
                 punch_time = log.PunchTime.ToString("yyyy-MM-dd HH:mm:ss"),
                 verify_mode = log.VerifyMode,
