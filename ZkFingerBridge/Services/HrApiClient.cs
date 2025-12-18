@@ -45,40 +45,34 @@ public sealed class HrApiClient : IHrApiClient
 
         _logger.LogInformation("Sending {Count} logs to HR API at {Endpoint}", logs.Count, _options.AttendanceEndpoint);
 
-        foreach (var log in logs)
+        // Build payload as array for batch endpoint
+        var payload = logs.Select(log => new
         {
-            cancellationToken.ThrowIfCancellationRequested();
+            company_id = _options.CompanyId,
+            branch_id = log.BranchId ?? _deviceOptions.BranchId,
+            employee_id = log.EmployeeId,
+            punch_time = log.PunchTime.ToString("yyyy-MM-dd HH:mm:ss"),
+            verify_mode = log.VerifyMode,
+            punch_type = log.PunchType,
+            work_code = log.WorkCode
+        }).ToArray();
 
-            // Build payload in Firstsoft.io PHP API format (single object, not array)
-            // Use log.BranchId if provided (for re-sending queued logs), otherwise use device config
-            var branchId = log.BranchId ?? _deviceOptions.BranchId;
-            
-            var payload = new
-            {
-                company_id = _options.CompanyId,
-                branch_id = branchId,
-                employee_id = log.EmployeeId,
-                punch_time = log.PunchTime.ToString("yyyy-MM-dd HH:mm:ss"),
-                verify_mode = log.VerifyMode,
-                punch_type = log.PunchType,
-                work_code = log.WorkCode
-            };
+        _logger.LogDebug("Posting batch of {Count} logs", payload.Length);
+        using var response = await _httpClient.PostAsJsonAsync(_options.AttendanceEndpoint, payload, cancellationToken);
 
-            _logger.LogDebug("Posting log for employee {EmployeeId} at {PunchTime}", log.EmployeeId, payload.punch_time);
-            using var response = await _httpClient.PostAsJsonAsync(_options.AttendanceEndpoint, payload, cancellationToken);
-
-            if (!response.IsSuccessStatusCode)
-            {
-                var body = await response.Content.ReadAsStringAsync(cancellationToken);
-                _logger.LogError("HR API error for employee {EmployeeId}: {Status} - {Body}", log.EmployeeId, response.StatusCode, body);
-                throw new InvalidOperationException($"HR API responded with {(int)response.StatusCode} - {response.ReasonPhrase}: {body}");
-            }
-            else
-            {
-                var result = await response.Content.ReadAsStringAsync(cancellationToken);
-                _logger.LogInformation("✅ Sent log for employee {EmployeeId}: {Result}", log.EmployeeId, result);
-            }
+        if (!response.IsSuccessStatusCode)
+        {
+            var body = await response.Content.ReadAsStringAsync(cancellationToken);
+            _logger.LogError("HR API error: {Status} - {Body}", response.StatusCode, body);
+            throw new InvalidOperationException($"HR API responded with {(int)response.StatusCode} - {response.ReasonPhrase}: {body}");
         }
+
+        var result = await response.Content.ReadFromJsonAsync<BiometricLogsResponse>(cancellationToken);
+        _logger.LogInformation("✅ Batch sent successfully: {Message} (Received: {Received}, Stored: {Stored}, Matched: {Matched})", 
+            result?.Message, 
+            result?.Data?.TotalReceived, 
+            result?.Data?.TotalStored,
+            result?.Data?.TotalMatched);
     }
 
     public async Task<CompaniesResponse?> GetCompaniesAsync(CancellationToken cancellationToken)

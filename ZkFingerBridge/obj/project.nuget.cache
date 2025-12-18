@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "lMNUJKHoX9o=",
+  "dgSpecHash": "oRmAuqMrG4M=",
   "success": true,
   "projectFilePath": "E:\\Fingerprint integration\\ZkFingerBridge\\ZkFingerBridge.csproj",
   "expectedPackageFiles": [
@@ -49,8 +49,7 @@
     "C:\\Users\\afvid\\.nuget\\packages\\sqlitepclraw.bundle_e_sqlite3\\2.1.11\\sqlitepclraw.bundle_e_sqlite3.2.1.11.nupkg.sha512",
     "C:\\Users\\afvid\\.nuget\\packages\\sqlitepclraw.core\\2.1.11\\sqlitepclraw.core.2.1.11.nupkg.sha512",
     "C:\\Users\\afvid\\.nuget\\packages\\sqlitepclraw.lib.e_sqlite3\\2.1.11\\sqlitepclraw.lib.e_sqlite3.2.1.11.nupkg.sha512",
-    "C:\\Users\\afvid\\.nuget\\packages\\sqlitepclraw.provider.e_sqlite3\\2.1.11\\sqlitepclraw.provider.e_sqlite3.2.1.11.nupkg.sha512",
-    "C:\\Users\\afvid\\.nuget\\packages\\system.diagnostics.eventlog\\10.0.0\\system.diagnostics.eventlog.10.0.0.nupkg.sha512"
+    "C:\\Users\\afvid\\.nuget\\packages\\sqlitepclraw.provider.e_sqlite3\\2.1.11\\sqlitepclraw.provider.e_sqlite3.2.1.11.nupkg.sha512"
   ],
   "logs": []
 }

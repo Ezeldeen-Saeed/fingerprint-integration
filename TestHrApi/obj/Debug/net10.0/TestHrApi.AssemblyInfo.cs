@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("TestHrApi")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+89a8797275654f49e2cd67dd6f39df3c41ccbdb5")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+cb94c7373d40a00fe54580d82ea73f0b53f88c26")]
 [assembly: System.Reflection.AssemblyProductAttribute("TestHrApi")]
 [assembly: System.Reflection.AssemblyTitleAttribute("TestHrApi")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
