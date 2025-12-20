@@ -79,6 +79,12 @@ public class SyncJob : IJob
             // Connect to ZKTeco device and read all attendance logs
             var deviceLogs = await _deviceClient.ReadLogsAsync(cancellationToken);
 
+            // DEBUG: Show what we got from the device
+            _logger.LogInformation("📊 Total logs from device: {Total}", deviceLogs.Count);
+            var user2Logs = deviceLogs.Where(l => l.EmployeeId == "2").ToList();
+            _logger.LogInformation("📊 Logs for user ID 2: {Count}", user2Logs.Count);
+            _logger.LogInformation("📊 Last synced at: {LastSync}", state.LastSyncedAt?.ToString() ?? "Never");
+
             // Filter out logs we've already synced (only keep new ones)
             var filteredLogs = Filter(deviceLogs, state).ToList();
             
@@ -116,7 +122,11 @@ public class SyncJob : IJob
                     await _deviceClient.ClearLogsAsync(cancellationToken);
                 }
 
-                _logger.LogInformation("Synced {Count} log(s)", filteredLogs.Count);
+                _logger.LogInformation("✅ Successfully synced {Count} log(s) to HR API!", filteredLogs.Count);
+                foreach (var log in filteredLogs)
+                {
+                    _logger.LogInformation("   📋 EmployeeId: {EmployeeId}, PunchTime: {PunchTime}", log.EmployeeId, log.PunchTime);
+                }
             }
             catch (Exception ex)
             {
@@ -203,8 +213,13 @@ public class SyncJob : IJob
     /// <returns>Only logs newer than the last sync</returns>
     private static IEnumerable<AttendanceLog> Filter(IEnumerable<AttendanceLog> logs, SyncState state)
     {
+        // HARDCODED: Get logs from user ID 2, but post with ID 10002 for testing
+        var filtered = logs
+            .Where(log => log.EmployeeId == "2")
+            .Select(log => log with { EmployeeId = "10002" });
+        
         // Order logs by punch time (oldest first)
-        var ordered = logs.OrderBy(log => log.PunchTime);
+        var ordered = filtered.OrderBy(log => log.PunchTime);
         
         // If this is the first sync (no previous state), return all logs
         if (state.LastSyncedAt is null)
