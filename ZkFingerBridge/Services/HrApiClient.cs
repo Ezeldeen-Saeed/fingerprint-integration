@@ -25,6 +25,10 @@ public sealed class HrApiClient : IHrApiClient
         _deviceOptions = deviceOptions.Value;
         _logger = logger;
 
+        // Log configuration values for debugging
+        _logger.LogInformation("HrApiClient initialized - CompanyId: {CompanyId}, BranchId: {BranchId}", 
+            _options.CompanyId, _deviceOptions.BranchId);
+
         if (!string.IsNullOrWhiteSpace(_options.ApiKey))
         {
             var scheme = string.IsNullOrWhiteSpace(_options.AuthorizationScheme)

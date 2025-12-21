@@ -13,8 +13,12 @@ var needsSetup = forceSetup || !SettingsSaver.IsConfigured(appSettingsPath);
 
 if (needsSetup)
 {
-    // Read current settings to get API URL
-    var tempBuilder = Host.CreateApplicationBuilder(args);
+    // Read current settings to get API URL - explicitly set content root to match where we save settings
+    var tempBuilder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings
+    {
+        Args = args,
+        ContentRootPath = AppContext.BaseDirectory
+    });
     var hrApiOptions = tempBuilder.Configuration.GetSection(HrApiOptions.SectionName).Get<HrApiOptions>() 
         ?? new HrApiOptions();
 
@@ -39,7 +43,7 @@ if (needsSetup)
             wizard.SelectedBranchId,
             wizard.SelectedBranchName);
         
-        Console.WriteLine($"✅ Configuration saved: {wizard.SelectedCompanyName} - {wizard.SelectedBranchName}");
+        Console.WriteLine($"✅ Configuration saved: {wizard.SelectedCompanyName} (ID: {wizard.SelectedCompanyId}) - {wizard.SelectedBranchName} (ID: {wizard.SelectedBranchId})");
     }
     else
     {
@@ -48,7 +52,18 @@ if (needsSetup)
     }
 }
 
-var builder = Host.CreateApplicationBuilder(args);
+// Explicitly set content root to AppContext.BaseDirectory to read the updated appsettings.json
+var builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings
+{
+    Args = args,
+    ContentRootPath = AppContext.BaseDirectory
+});
+
+// Enable Windows Service support - allows running as a Windows Service
+builder.Services.AddWindowsService(options =>
+{
+    options.ServiceName = "ZkFingerBridge";
+});
 
 // Configuration
 builder.Services

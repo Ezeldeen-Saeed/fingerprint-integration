@@ -15,8 +15,8 @@ public sealed class HrApiOptions
 
     /// <summary>
     /// Company ID required by the Firstsoft.io API.
+    /// Set to 0 if not yet configured (wizard will prompt).
     /// </summary>
-    [Range(1, int.MaxValue)]
     public int CompanyId { get; set; }
 
     /// <summary>

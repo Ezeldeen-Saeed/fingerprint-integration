@@ -81,8 +81,6 @@ public class SyncJob : IJob
 
             // DEBUG: Show what we got from the device
             _logger.LogInformation("📊 Total logs from device: {Total}", deviceLogs.Count);
-            var user2Logs = deviceLogs.Where(l => l.EmployeeId == "2").ToList();
-            _logger.LogInformation("📊 Logs for user ID 2: {Count}", user2Logs.Count);
             _logger.LogInformation("📊 Last synced at: {LastSync}", state.LastSyncedAt?.ToString() ?? "Never");
 
             // Filter out logs we've already synced (only keep new ones)
@@ -213,13 +211,8 @@ public class SyncJob : IJob
     /// <returns>Only logs newer than the last sync</returns>
     private static IEnumerable<AttendanceLog> Filter(IEnumerable<AttendanceLog> logs, SyncState state)
     {
-        // HARDCODED: Get logs from user ID 2, but post with ID 10002 for testing
-        var filtered = logs
-            .Where(log => log.EmployeeId == "2")
-            .Select(log => log with { EmployeeId = "10002" });
-        
         // Order logs by punch time (oldest first)
-        var ordered = filtered.OrderBy(log => log.PunchTime);
+        var ordered = logs.OrderBy(log => log.PunchTime);
         
         // If this is the first sync (no previous state), return all logs
         if (state.LastSyncedAt is null)
