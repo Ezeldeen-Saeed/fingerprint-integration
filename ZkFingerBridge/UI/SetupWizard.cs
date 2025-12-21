@@ -5,12 +5,13 @@ using ZkFingerBridge.Models;
 namespace ZkFingerBridge.UI;
 
 /// <summary>
-/// Setup wizard for selecting company and branch during initial installation
+/// Setup wizard for selecting company, branch, and ZK device IP during initial installation
 /// </summary>
 public class SetupWizard : Form
 {
     private readonly ComboBox _companyCombo;
     private readonly ComboBox _branchCombo;
+    private readonly TextBox _deviceIpTextBox;
     private readonly Button _saveButton;
     private readonly Label _statusLabel;
     private readonly string _apiBaseUrl;
@@ -23,6 +24,7 @@ public class SetupWizard : Form
     public string? SelectedCompanyName { get; private set; }
     public int SelectedBranchId { get; private set; }
     public string? SelectedBranchName { get; private set; }
+    public string? DeviceIpAddress { get; private set; }
     public bool ConfigurationSaved { get; private set; }
 
     public SetupWizard(string apiBaseUrl, string companiesEndpoint, string? apiKey = null)
@@ -31,9 +33,9 @@ public class SetupWizard : Form
         _companiesEndpoint = companiesEndpoint;
         _apiKey = apiKey;
         
-        // Form setup
+        // Form setup - increased height to accommodate new field
         Text = "إعداد ZkFingerBridge";
-        Size = new Size(450, 300);
+        Size = new Size(450, 380);
         StartPosition = FormStartPosition.CenterScreen;
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
@@ -79,13 +81,34 @@ public class SetupWizard : Form
             DropDownStyle = ComboBoxStyle.DropDownList,
             Enabled = false
         };
+        _branchCombo.SelectedIndexChanged += BranchCombo_SelectedIndexChanged;
         Controls.Add(_branchCombo);
+
+        // Device IP label
+        var deviceIpLabel = new Label
+        {
+            Text = "عنوان IP لجهاز البصمة:",
+            Location = new Point(265, 170),
+            AutoSize = true
+        };
+        Controls.Add(deviceIpLabel);
+
+        // Device IP text box
+        _deviceIpTextBox = new TextBox
+        {
+            Location = new Point(30, 195),
+            Size = new Size(380, 30),
+            RightToLeft = RightToLeft.No, // IP addresses are LTR
+            PlaceholderText = "مثال: 192.168.1.100"
+        };
+        _deviceIpTextBox.TextChanged += DeviceIpTextBox_TextChanged;
+        Controls.Add(_deviceIpTextBox);
 
         // Status label
         _statusLabel = new Label
         {
             Text = "جاري تحميل الشركات...",
-            Location = new Point(30, 170),
+            Location = new Point(30, 240),
             Size = new Size(380, 25),
             TextAlign = ContentAlignment.MiddleCenter,
             ForeColor = Color.Gray
@@ -96,7 +119,7 @@ public class SetupWizard : Form
         _saveButton = new Button
         {
             Text = "حفظ وبدء الخدمة",
-            Location = new Point(130, 210),
+            Location = new Point(130, 280),
             Size = new Size(180, 40),
             Enabled = false
         };
@@ -151,7 +174,7 @@ public class SetupWizard : Form
                 }
                 
                 _companyCombo.Enabled = true;
-                _statusLabel.Text = $"تم تحميل {_companies.Count} شركة - اختر الشركة والفرع";
+                _statusLabel.Text = $"تم تحميل {_companies.Count} شركة - أكمل جميع الحقول";
                 _statusLabel.ForeColor = Color.Green;
             }
             else
@@ -177,7 +200,7 @@ public class SetupWizard : Form
     {
         _branchCombo.Items.Clear();
         _branchCombo.Enabled = false;
-        _saveButton.Enabled = false;
+        UpdateSaveButtonState();
 
         if (_companyCombo.SelectedItem is not ComboBoxItem selectedCompany || _companies == null)
             return;
@@ -196,21 +219,56 @@ public class SetupWizard : Form
         }
 
         _branchCombo.Enabled = true;
-        _branchCombo.SelectedIndexChanged += (_, _) =>
+    }
+
+    private void BranchCombo_SelectedIndexChanged(object? sender, EventArgs e)
+    {
+        UpdateSaveButtonState();
+    }
+
+    private void DeviceIpTextBox_TextChanged(object? sender, EventArgs e)
+    {
+        UpdateSaveButtonState();
+    }
+
+    private void UpdateSaveButtonState()
+    {
+        // Enable save button only when company, branch, and IP are all filled
+        var hasCompany = _companyCombo.SelectedItem != null;
+        var hasBranch = _branchCombo.SelectedItem != null;
+        var hasIp = !string.IsNullOrWhiteSpace(_deviceIpTextBox.Text) && IsValidIpAddress(_deviceIpTextBox.Text);
+        
+        _saveButton.Enabled = hasCompany && hasBranch && hasIp;
+    }
+
+    private static bool IsValidIpAddress(string ip)
+    {
+        // Basic IP validation
+        if (string.IsNullOrWhiteSpace(ip)) return false;
+        
+        var parts = ip.Trim().Split('.');
+        if (parts.Length != 4) return false;
+        
+        foreach (var part in parts)
         {
-            _saveButton.Enabled = _branchCombo.SelectedItem != null;
-        };
+            if (!int.TryParse(part, out var num) || num < 0 || num > 255)
+                return false;
+        }
+        
+        return true;
     }
 
     private void SaveButton_Click(object? sender, EventArgs e)
     {
         if (_companyCombo.SelectedItem is ComboBoxItem company && 
-            _branchCombo.SelectedItem is ComboBoxItem branch)
+            _branchCombo.SelectedItem is ComboBoxItem branch &&
+            IsValidIpAddress(_deviceIpTextBox.Text))
         {
             SelectedCompanyId = company.Value;
             SelectedCompanyName = company.Text;
             SelectedBranchId = branch.Value;
             SelectedBranchName = branch.Text;
+            DeviceIpAddress = _deviceIpTextBox.Text.Trim();
             ConfigurationSaved = true;
             
             DialogResult = DialogResult.OK;

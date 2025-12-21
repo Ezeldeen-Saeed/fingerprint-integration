@@ -9,14 +9,15 @@ namespace ZkFingerBridge.UI;
 public static class SettingsSaver
 {
     /// <summary>
-    /// Updates appsettings.json with the selected company and branch
+    /// Updates appsettings.json with the selected company, branch, and device IP
     /// </summary>
     public static void SaveSettings(
         string appSettingsPath,
         int companyId,
         string? companyName,
         int branchId,
-        string? branchName)
+        string? branchName,
+        string? deviceIpAddress = null)
     {
         var json = File.ReadAllText(appSettingsPath);
         var jsonNode = JsonNode.Parse(json) ?? throw new InvalidOperationException("Invalid appsettings.json");
@@ -30,6 +31,13 @@ public static class SettingsSaver
         var zkDevice = jsonNode["ZkDevice"] ?? throw new InvalidOperationException("ZkDevice section not found");
         zkDevice["BranchId"] = branchId;
         zkDevice["BranchName"] = branchName;
+        
+        // Save device IP if provided (disable auto-discovery when manual IP is set)
+        if (!string.IsNullOrWhiteSpace(deviceIpAddress))
+        {
+            zkDevice["IpAddress"] = deviceIpAddress;
+            zkDevice["EnableAutoDiscovery"] = false;
+        }
 
         // Write back to file with proper formatting
         var options = new JsonSerializerOptions 

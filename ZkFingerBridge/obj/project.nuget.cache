@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "JlNwoxvpqJs=",
+  "dgSpecHash": "6tFDYPhQvac=",
   "success": true,
   "projectFilePath": "E:\\Fingerprint integration\\ZkFingerBridge\\ZkFingerBridge.csproj",
   "expectedPackageFiles": [
@@ -47,6 +47,10 @@
     "C:\\Users\\afvid\\.nuget\\packages\\quartz\\3.15.1\\quartz.3.15.1.nupkg.sha512",
     "C:\\Users\\afvid\\.nuget\\packages\\quartz.extensions.dependencyinjection\\3.15.1\\quartz.extensions.dependencyinjection.3.15.1.nupkg.sha512",
     "C:\\Users\\afvid\\.nuget\\packages\\quartz.extensions.hosting\\3.15.1\\quartz.extensions.hosting.3.15.1.nupkg.sha512",
+    "C:\\Users\\afvid\\.nuget\\packages\\serilog\\4.3.0\\serilog.4.3.0.nupkg.sha512",
+    "C:\\Users\\afvid\\.nuget\\packages\\serilog.extensions.hosting\\10.0.0\\serilog.extensions.hosting.10.0.0.nupkg.sha512",
+    "C:\\Users\\afvid\\.nuget\\packages\\serilog.extensions.logging\\10.0.0\\serilog.extensions.logging.10.0.0.nupkg.sha512",
+    "C:\\Users\\afvid\\.nuget\\packages\\serilog.sinks.file\\7.0.0\\serilog.sinks.file.7.0.0.nupkg.sha512",
     "C:\\Users\\afvid\\.nuget\\packages\\sqlitepclraw.bundle_e_sqlite3\\2.1.11\\sqlitepclraw.bundle_e_sqlite3.2.1.11.nupkg.sha512",
     "C:\\Users\\afvid\\.nuget\\packages\\sqlitepclraw.core\\2.1.11\\sqlitepclraw.core.2.1.11.nupkg.sha512",
     "C:\\Users\\afvid\\.nuget\\packages\\sqlitepclraw.lib.e_sqlite3\\2.1.11\\sqlitepclraw.lib.e_sqlite3.2.1.11.nupkg.sha512",

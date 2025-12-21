@@ -35,15 +35,16 @@ if (needsSetup)
     
     if (wizard.ConfigurationSaved)
     {
-        // Save the selected company and branch to appsettings.json
+        // Save the selected company, branch, and device IP to appsettings.json
         SettingsSaver.SaveSettings(
             appSettingsPath,
             wizard.SelectedCompanyId,
             wizard.SelectedCompanyName,
             wizard.SelectedBranchId,
-            wizard.SelectedBranchName);
+            wizard.SelectedBranchName,
+            wizard.DeviceIpAddress);
         
-        Console.WriteLine($"✅ Configuration saved: {wizard.SelectedCompanyName} (ID: {wizard.SelectedCompanyId}) - {wizard.SelectedBranchName} (ID: {wizard.SelectedBranchId})");
+        Console.WriteLine($"✅ Configuration saved: {wizard.SelectedCompanyName} (ID: {wizard.SelectedCompanyId}) - {wizard.SelectedBranchName} (ID: {wizard.SelectedBranchId}) - Device: {wizard.DeviceIpAddress}");
     }
     else
     {
@@ -91,6 +92,7 @@ builder.Services
     .ValidateOnStart();
 
 // Services
+builder.Services.AddSingleton<IDeviceConfigurationHolder, DeviceConfigurationHolder>();
 builder.Services.AddSingleton<IZkDeviceClient, ZkDeviceClient>();
 builder.Services.AddSingleton<IStateStore, FileStateStore>();
 builder.Services.AddSingleton<IDeviceDiscoveryService, DeviceDiscoveryService>();

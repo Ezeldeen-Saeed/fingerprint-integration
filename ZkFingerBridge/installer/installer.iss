@@ -33,8 +33,10 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-; Copy all files from publish folder
+; Copy all files from publish folder (includes ZK SDK DLLs)
 Source: "..\publish\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+; Mark zkemkeeper.dll for COM registration
+Source: "..\publish\zkemkeeper.dll"; DestDir: "{app}"; Flags: ignoreversion regserver 32bit
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"

@@ -8,15 +8,17 @@ namespace ZkFingerBridge.Services;
 
 public sealed class ZkDeviceClient : IZkDeviceClient
 {
-    private readonly ZkDeviceOptions _options;
+    private readonly IDeviceConfigurationHolder _configHolder;
     private readonly ILogger<ZkDeviceClient> _logger;
     private readonly object _syncRoot = new();
     private readonly dynamic _zkem;
     private bool _connected;
 
-    public ZkDeviceClient(IOptions<ZkDeviceOptions> options, ILogger<ZkDeviceClient> logger)
+    public ZkDeviceClient(
+        IDeviceConfigurationHolder configHolder,
+        ILogger<ZkDeviceClient> logger)
     {
-        _options = options.Value;
+        _configHolder = configHolder;
         _logger = logger;
 
         var zkType = Type.GetTypeFromProgID("zkemkeeper.ZKEM")
@@ -36,12 +38,13 @@ public sealed class ZkDeviceClient : IZkDeviceClient
                 EnsureConnectedUnsafe();
 
                 var logs = new List<AttendanceLog>();
-                _logger.LogInformation("Reading logs from device {Machine} ({Ip}:{Port})", _options.MachineNumber, _options.IpAddress, _options.Port);
+                _logger.LogInformation("Reading logs from device {Machine} ({Ip}:{Port})", 
+                    _configHolder.MachineNumber, _configHolder.IpAddress, _configHolder.Port);
 
-                _zkem.EnableDevice(_options.MachineNumber, false);
+                _zkem.EnableDevice(_configHolder.MachineNumber, false);
                 try
                 {
-                    if (!_zkem.ReadAllGLogData(_options.MachineNumber))
+                    if (!_zkem.ReadAllGLogData(_configHolder.MachineNumber))
                     {
                         var error = GetLastError();
                         _logger.LogWarning("ReadAllGLogData returned false (error {ErrorCode})", error);
@@ -62,7 +65,7 @@ public sealed class ZkDeviceClient : IZkDeviceClient
                 }
                 finally
                 {
-                    _zkem.EnableDevice(_options.MachineNumber, true);
+                    _zkem.EnableDevice(_configHolder.MachineNumber, true);
                 }
             }
         }, cancellationToken);
@@ -77,12 +80,12 @@ public sealed class ZkDeviceClient : IZkDeviceClient
                 cancellationToken.ThrowIfCancellationRequested();
                 EnsureConnectedUnsafe();
 
-                if (!_zkem.ClearGLog(_options.MachineNumber))
+                if (!_zkem.ClearGLog(_configHolder.MachineNumber))
                 {
                     throw new InvalidOperationException($"ClearGLog failed with error {GetLastError()}");
                 }
 
-                _logger.LogInformation("Cleared logs on device {Machine}", _options.MachineNumber);
+                _logger.LogInformation("Cleared logs on device {Machine}", _configHolder.MachineNumber);
             }
         }, cancellationToken);
     }
@@ -121,15 +124,15 @@ public sealed class ZkDeviceClient : IZkDeviceClient
             return;
         }
 
-        _logger.LogInformation("Connecting to device at {Ip}:{Port}", _options.IpAddress, _options.Port);
-        if (!_zkem.Connect_Net(_options.IpAddress, _options.Port))
+        _logger.LogInformation("Connecting to device at {Ip}:{Port}", _configHolder.IpAddress, _configHolder.Port);
+        if (!_zkem.Connect_Net(_configHolder.IpAddress, _configHolder.Port))
         {
             throw new InvalidOperationException($"Connect_Net failed with error {GetLastError()}");
         }
 
-        if (_options.CommPassword.HasValue)
+        if (_configHolder.CommPassword.HasValue)
         {
-            _zkem.SetCommPassword(_options.CommPassword.Value);
+            _zkem.SetCommPassword(_configHolder.CommPassword.Value);
         }
 
         _connected = true;
@@ -149,7 +152,7 @@ public sealed class ZkDeviceClient : IZkDeviceClient
         int workCode = 0;
 
         var success = _zkem.SSR_GetGeneralLogData(
-            _options.MachineNumber,
+            _configHolder.MachineNumber,
             out enrollNumber,
             out verifyMode,
             out inOutMode,
