@@ -17,6 +17,7 @@
           "Microsoft.Extensions.Options.DataAnnotations": "10.0.1",
           "Quartz.Extensions.Hosting": "3.15.1",
           "Serilog.Extensions.Hosting": "10.0.0",
+          "Serilog.Sinks.Console": "6.1.1",
           "Serilog.Sinks.File": "7.0.0",
           "runtimepack.Microsoft.NETCore.App.Runtime.win-x86": "10.0.0",
           "runtimepack.Microsoft.WindowsDesktop.App.Runtime.win-x86": "10.0.0"
@@ -1452,6 +1453,17 @@
           }
         }
       },
+      "Serilog.Sinks.Console/6.1.1": {
+        "dependencies": {
+          "Serilog": "4.3.0"
+        },
+        "runtime": {
+          "lib/net8.0/Serilog.Sinks.Console.dll": {
+            "assemblyVersion": "6.1.1.0",
+            "fileVersion": "6.1.1.0"
+          }
+        }
+      },
       "Serilog.Sinks.File/7.0.0": {
         "dependencies": {
           "Serilog": "4.3.0"
@@ -1841,6 +1853,13 @@
       "sha512": "sha512-vx0kABKl2dWbBhhqAfTOk53/i8aV/5VaT3a6il9gn72Wqs2pM7EK2OB6No6xdqK2IaY6Zf9gdjLuK9BVa2rT+Q==",
       "path": "serilog.extensions.logging/10.0.0",
       "hashPath": "serilog.extensions.logging.10.0.0.nupkg.sha512"
+    },
+    "Serilog.Sinks.Console/6.1.1": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-8jbqgjUyZlfCuSTaJk6lOca465OndqOz3KZP6Cryt/IqZYybyBu7GP0fE/AXBzrrQB3EBmQntBFAvMVz1COvAA==",
+      "path": "serilog.sinks.console/6.1.1",
+      "hashPath": "serilog.sinks.console.6.1.1.nupkg.sha512"
     },
     "Serilog.Sinks.File/7.0.0": {
       "type": "package",
