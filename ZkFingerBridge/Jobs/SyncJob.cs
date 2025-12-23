@@ -154,7 +154,7 @@ public class SyncJob : IJob
     /// <summary>
     /// Attempts to send any logs that are in the offline queue.
     /// This runs before reading new logs from the device to prioritize old data.
-    /// Sends all pending logs in a single batch request for efficiency.
+    /// Logs are sent in batches to reduce HTTP requests.
     /// </summary>
     private async Task TryProcessQueueAsync(CancellationToken cancellationToken)
     {
@@ -166,50 +166,113 @@ public class SyncJob : IJob
             return;
         }
 
-        _logger.LogInformation("📤 Processing {Count} queued log(s) in batch...", pendingCount);
+        _logger.LogInformation("📤 Processing {Count} queued log(s) in batches of {BatchSize}...", 
+            pendingCount, _queueOptions.BatchSize);
 
         // Get all pending logs that haven't exceeded max retry attempts
-        var queuedLogs = (await _logQueue.GetPendingAsync(_queueOptions.MaxRetryAttempts, cancellationToken)).ToList();
-        
-        if (queuedLogs.Count == 0)
+        var queuedLogs = await _logQueue.GetPendingAsync(_queueOptions.MaxRetryAttempts, cancellationToken);
+
+        // Group logs by BranchId first (API expects same branch per request)
+        var groupedByBranch = queuedLogs.GroupBy(log => log.BranchId);
+
+        foreach (var branchGroup in groupedByBranch)
         {
-            return;
+            // Then batch each branch group
+            var batches = branchGroup.Chunk(_queueOptions.BatchSize);
+            
+            foreach (var batch in batches)
+            {
+                await ProcessBatchAsync(batch.ToList(), cancellationToken);
+            }
         }
+    }
 
-        // Convert all QueuedLogs to AttendanceLogs for batch sending
-        var attendanceLogs = queuedLogs.Select(queuedLog => new AttendanceLog(
-            queuedLog.EmployeeId,
-            queuedLog.PunchTime,
-            queuedLog.VerifyMode,
-            queuedLog.PunchType,
-            queuedLog.WorkCode,
-            queuedLog.BranchId  // Pass the stored BranchId for correct routing
-        )).ToList();
-
+    /// <summary>
+    /// Processes a single batch of queued logs
+    /// </summary>
+    private async Task ProcessBatchAsync(List<QueuedLog> batch, CancellationToken cancellationToken)
+    {
         try
         {
-            // Send all logs in a single batch request
-            await _hrApiClient.SendAsync(attendanceLogs, cancellationToken);
+            // Convert batch to AttendanceLog[]
+            var attendanceLogs = batch.Select(q => new AttendanceLog(
+                q.EmployeeId,
+                q.PunchTime,
+                q.VerifyMode,
+                q.PunchType,
+                q.WorkCode,
+                q.BranchId
+            )).ToArray();
 
-            // ✅ SUCCESS! Mark all logs as sent
-            foreach (var queuedLog in queuedLogs)
-            {
-                await _logQueue.MarkAsSentAsync(queuedLog.Id, cancellationToken);
-            }
-            
-            _logger.LogInformation("✅ Successfully sent batch of {Count} queued log(s)", queuedLogs.Count);
+            // Send entire batch in one request
+            var response = await _hrApiClient.SendAsync(attendanceLogs, cancellationToken);
+
+            // Handle response and mark logs accordingly
+            await HandleBatchResponseAsync(batch, response, cancellationToken);
         }
         catch (Exception ex)
         {
-            // ❌ FAILED - Mark all logs as failed with error message
-            // They will be retried on the next sync cycle (up to MaxRetryAttempts)
-            _logger.LogWarning(ex, "Failed to send batch of {Count} queued logs. Will retry later.", queuedLogs.Count);
+            // Network/API error - mark all logs in batch as failed for retry
+            _logger.LogError(ex, "Failed to send batch of {Count} logs", batch.Count);
             
-            foreach (var queuedLog in queuedLogs)
+            foreach (var log in batch)
             {
-                await _logQueue.MarkAsFailedAsync(queuedLog.Id, ex.Message, cancellationToken);
+                await _logQueue.MarkAsFailedAsync(log.Id, ex.Message, cancellationToken);
             }
         }
+    }
+
+    /// <summary>
+    /// Handles the API response for a batch, marking logs appropriately based on success/failure
+    /// </summary>
+    private async Task HandleBatchResponseAsync(
+        List<QueuedLog> batch, 
+        BiometricLogsResponse response, 
+        CancellationToken cancellationToken)
+    {
+        // Extract unmatched employee details from response
+        var unmatchedEmployees = response.Errors?.UnmatchedEmployees?.Details
+            ?? new List<UnmatchedEmployeeError>();
+        
+        var unmatchedEmployeeIds = unmatchedEmployees
+            .Select(e => e.EmployeeId)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        int sentCount = 0;
+        int unmatchedCount = 0;
+
+        foreach (var log in batch)
+        {
+            if (unmatchedEmployeeIds.Contains(log.EmployeeId))
+            {
+                // Find the specific error for this employee
+                var errorDetail = unmatchedEmployees.FirstOrDefault(
+                    e => e.EmployeeId.Equals(log.EmployeeId, StringComparison.OrdinalIgnoreCase));
+                
+                var errorMessage = errorDetail?.Error ?? "Employee not found in HR system";
+                
+                // Log the specific employee and error
+                _logger.LogWarning("❌ Employee {EmployeeId}: {Error}", log.EmployeeId, errorMessage);
+                
+                // Employee not found in HR system - retry with low priority
+                // This allows HR to fix the issue (add employee) and it will be retried later
+                await _logQueue.IncreasePriorityAsync(log.Id, cancellationToken);
+                unmatchedCount++;
+            }
+            else
+            {
+                // Success or duplicate - both are okay to mark as sent
+                await _logQueue.MarkAsSentAsync(log.Id, cancellationToken);
+                sentCount++;
+            }
+        }
+        
+        if (unmatchedCount > 0)
+        {
+            _logger.LogWarning("⚠ {Count} unmatched employee(s) moved to low-priority retry queue", unmatchedCount);
+        }
+        
+        _logger.LogInformation("✅ Batch processed: {Sent} sent, {Unmatched} retrying later", sentCount, unmatchedCount);
     }
 
     /// <summary>

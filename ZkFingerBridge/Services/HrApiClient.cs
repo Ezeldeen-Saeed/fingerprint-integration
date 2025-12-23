@@ -40,11 +40,11 @@ public sealed class HrApiClient : IHrApiClient
         }
     }
 
-    public async Task SendAsync(IReadOnlyCollection<AttendanceLog> logs, CancellationToken cancellationToken)
+    public async Task<BiometricLogsResponse> SendAsync(IReadOnlyCollection<AttendanceLog> logs, CancellationToken cancellationToken)
     {
         if (logs.Count == 0)
         {
-            return;
+            throw new ArgumentException("Cannot send empty log collection", nameof(logs));
         }
 
         _logger.LogInformation("Sending {Count} logs to HR API at {Endpoint}", logs.Count, _options.AttendanceEndpoint);
@@ -72,11 +72,19 @@ public sealed class HrApiClient : IHrApiClient
         }
 
         var result = await response.Content.ReadFromJsonAsync<BiometricLogsResponse>(cancellationToken);
+        
+        if (result == null)
+        {
+            throw new InvalidOperationException("API returned empty response");
+        }
+        
         _logger.LogInformation("✅ Batch sent successfully: {Message} (Received: {Received}, Stored: {Stored}, Matched: {Matched})", 
-            result?.Message, 
-            result?.Data?.TotalReceived, 
-            result?.Data?.TotalStored,
-            result?.Data?.TotalMatched);
+            result.Message, 
+            result.Data?.TotalReceived, 
+            result.Data?.TotalStored,
+            result.Data?.TotalMatched);
+            
+        return result;
     }
 
     public async Task<CompaniesResponse?> GetCompaniesAsync(CancellationToken cancellationToken)
