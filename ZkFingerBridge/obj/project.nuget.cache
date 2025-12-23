@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "y74VC83frA0=",
+  "dgSpecHash": "TziSsBwdzhU=",
   "success": true,
   "projectFilePath": "E:\\Fingerprint integration\\ZkFingerBridge\\ZkFingerBridge.csproj",
   "expectedPackageFiles": [
@@ -50,12 +50,16 @@
     "C:\\Users\\afvid\\.nuget\\packages\\serilog\\4.3.0\\serilog.4.3.0.nupkg.sha512",
     "C:\\Users\\afvid\\.nuget\\packages\\serilog.extensions.hosting\\10.0.0\\serilog.extensions.hosting.10.0.0.nupkg.sha512",
     "C:\\Users\\afvid\\.nuget\\packages\\serilog.extensions.logging\\10.0.0\\serilog.extensions.logging.10.0.0.nupkg.sha512",
+    "C:\\Users\\afvid\\.nuget\\packages\\serilog.sinks.console\\6.1.1\\serilog.sinks.console.6.1.1.nupkg.sha512",
     "C:\\Users\\afvid\\.nuget\\packages\\serilog.sinks.file\\7.0.0\\serilog.sinks.file.7.0.0.nupkg.sha512",
     "C:\\Users\\afvid\\.nuget\\packages\\sqlitepclraw.bundle_e_sqlite3\\2.1.11\\sqlitepclraw.bundle_e_sqlite3.2.1.11.nupkg.sha512",
     "C:\\Users\\afvid\\.nuget\\packages\\sqlitepclraw.core\\2.1.11\\sqlitepclraw.core.2.1.11.nupkg.sha512",
     "C:\\Users\\afvid\\.nuget\\packages\\sqlitepclraw.lib.e_sqlite3\\2.1.11\\sqlitepclraw.lib.e_sqlite3.2.1.11.nupkg.sha512",
     "C:\\Users\\afvid\\.nuget\\packages\\sqlitepclraw.provider.e_sqlite3\\2.1.11\\sqlitepclraw.provider.e_sqlite3.2.1.11.nupkg.sha512",
-    "C:\\Users\\afvid\\.nuget\\packages\\system.serviceprocess.servicecontroller\\10.0.1\\system.serviceprocess.servicecontroller.10.0.1.nupkg.sha512"
+    "C:\\Users\\afvid\\.nuget\\packages\\system.serviceprocess.servicecontroller\\10.0.1\\system.serviceprocess.servicecontroller.10.0.1.nupkg.sha512",
+    "C:\\Users\\afvid\\.nuget\\packages\\microsoft.netcore.app.runtime.win-x86\\10.0.0\\microsoft.netcore.app.runtime.win-x86.10.0.0.nupkg.sha512",
+    "C:\\Users\\afvid\\.nuget\\packages\\microsoft.windowsdesktop.app.runtime.win-x86\\10.0.0\\microsoft.windowsdesktop.app.runtime.win-x86.10.0.0.nupkg.sha512",
+    "C:\\Users\\afvid\\.nuget\\packages\\microsoft.aspnetcore.app.runtime.win-x86\\10.0.0\\microsoft.aspnetcore.app.runtime.win-x86.10.0.0.nupkg.sha512"
   ],
   "logs": []
 }
