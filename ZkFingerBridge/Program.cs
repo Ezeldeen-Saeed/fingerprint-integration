@@ -5,6 +5,22 @@ using ZkFingerBridge.Configuration;
 using ZkFingerBridge.Jobs;
 using ZkFingerBridge.Services;
 using ZkFingerBridge.UI;
+using Serilog;
+
+// Configure Serilog for file logging
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Information()
+    .WriteTo.Console()
+    .WriteTo.File(
+        path: Path.Combine(AppContext.BaseDirectory, "logs", "log-.txt"),
+        rollingInterval: RollingInterval.Day,
+        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss} [{Level:u3}] {Message:lj}{NewLine}{Exception}")
+    .CreateLogger();
+
+try
+{
+    Log.Information("ZkFingerBridge starting up...");
+
 
 // Check for --setup flag or if not configured
 var appSettingsPath = Path.Combine(AppContext.BaseDirectory, "appsettings.json");
@@ -59,6 +75,9 @@ var builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings
     Args = args,
     ContentRootPath = AppContext.BaseDirectory
 });
+
+// Add Serilog
+builder.Services.AddSerilog();
 
 // Enable Windows Service support - allows running as a Windows Service
 builder.Services.AddWindowsService(options =>
@@ -137,4 +156,14 @@ builder.Services.AddQuartzHostedService(options =>
 builder.Services.AddHostedService<StartupWorker>();
 
 var host = builder.Build();
-host.Run();
+    host.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Application terminated unexpectedly");
+}
+finally
+{
+    Log.Information("ZkFingerBridge shutting down...");
+    Log.CloseAndFlush();
+}
