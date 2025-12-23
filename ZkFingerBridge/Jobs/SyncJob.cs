@@ -154,6 +154,7 @@ public class SyncJob : IJob
     /// <summary>
     /// Attempts to send any logs that are in the offline queue.
     /// This runs before reading new logs from the device to prioritize old data.
+    /// Sends all pending logs in a single batch request for efficiency.
     /// </summary>
     private async Task TryProcessQueueAsync(CancellationToken cancellationToken)
     {
@@ -165,38 +166,47 @@ public class SyncJob : IJob
             return;
         }
 
-        _logger.LogInformation("📤 Processing {Count} queued log(s)...", pendingCount);
+        _logger.LogInformation("📤 Processing {Count} queued log(s) in batch...", pendingCount);
 
         // Get all pending logs that haven't exceeded max retry attempts
-        var queuedLogs = await _logQueue.GetPendingAsync(_queueOptions.MaxRetryAttempts, cancellationToken);
-
-        // Try to send each queued log
-        foreach (var queuedLog in queuedLogs)
+        var queuedLogs = (await _logQueue.GetPendingAsync(_queueOptions.MaxRetryAttempts, cancellationToken)).ToList();
+        
+        if (queuedLogs.Count == 0)
         {
-            try
+            return;
+        }
+
+        // Convert all QueuedLogs to AttendanceLogs for batch sending
+        var attendanceLogs = queuedLogs.Select(queuedLog => new AttendanceLog(
+            queuedLog.EmployeeId,
+            queuedLog.PunchTime,
+            queuedLog.VerifyMode,
+            queuedLog.PunchType,
+            queuedLog.WorkCode,
+            queuedLog.BranchId  // Pass the stored BranchId for correct routing
+        )).ToList();
+
+        try
+        {
+            // Send all logs in a single batch request
+            await _hrApiClient.SendAsync(attendanceLogs, cancellationToken);
+
+            // ✅ SUCCESS! Mark all logs as sent
+            foreach (var queuedLog in queuedLogs)
             {
-                // Convert QueuedLog (database entity) back to AttendanceLog (API model)
-                // Include BranchId so the log is sent to the correct branch
-                var attendanceLog = new AttendanceLog(
-                    queuedLog.EmployeeId,
-                    queuedLog.PunchTime,
-                    queuedLog.VerifyMode,
-                    queuedLog.PunchType,
-                    queuedLog.WorkCode,
-                    queuedLog.BranchId  // Pass the stored BranchId for correct routing
-                );
-
-                // Try to send this single log to the API
-                await _hrApiClient.SendAsync(new[] { attendanceLog }, cancellationToken);
-
-                // ✅ Success! Mark this log as sent in the database
                 await _logQueue.MarkAsSentAsync(queuedLog.Id, cancellationToken);
-                _logger.LogInformation("✅ Sent queued log {LogId}", queuedLog.Id);
             }
-            catch (Exception ex)
+            
+            _logger.LogInformation("✅ Successfully sent batch of {Count} queued log(s)", queuedLogs.Count);
+        }
+        catch (Exception ex)
+        {
+            // ❌ FAILED - Mark all logs as failed with error message
+            // They will be retried on the next sync cycle (up to MaxRetryAttempts)
+            _logger.LogWarning(ex, "Failed to send batch of {Count} queued logs. Will retry later.", queuedLogs.Count);
+            
+            foreach (var queuedLog in queuedLogs)
             {
-                // ❌ Failed again - increment retry count and save error message
-                // The log will be retried on the next sync cycle (up to MaxRetryAttempts)
                 await _logQueue.MarkAsFailedAsync(queuedLog.Id, ex.Message, cancellationToken);
             }
         }

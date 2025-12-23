@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "6tFDYPhQvac=",
+  "dgSpecHash": "y74VC83frA0=",
   "success": true,
   "projectFilePath": "E:\\Fingerprint integration\\ZkFingerBridge\\ZkFingerBridge.csproj",
   "expectedPackageFiles": [
@@ -55,10 +55,7 @@
     "C:\\Users\\afvid\\.nuget\\packages\\sqlitepclraw.core\\2.1.11\\sqlitepclraw.core.2.1.11.nupkg.sha512",
     "C:\\Users\\afvid\\.nuget\\packages\\sqlitepclraw.lib.e_sqlite3\\2.1.11\\sqlitepclraw.lib.e_sqlite3.2.1.11.nupkg.sha512",
     "C:\\Users\\afvid\\.nuget\\packages\\sqlitepclraw.provider.e_sqlite3\\2.1.11\\sqlitepclraw.provider.e_sqlite3.2.1.11.nupkg.sha512",
-    "C:\\Users\\afvid\\.nuget\\packages\\system.serviceprocess.servicecontroller\\10.0.1\\system.serviceprocess.servicecontroller.10.0.1.nupkg.sha512",
-    "C:\\Users\\afvid\\.nuget\\packages\\microsoft.netcore.app.runtime.win-x86\\10.0.0\\microsoft.netcore.app.runtime.win-x86.10.0.0.nupkg.sha512",
-    "C:\\Users\\afvid\\.nuget\\packages\\microsoft.windowsdesktop.app.runtime.win-x86\\10.0.0\\microsoft.windowsdesktop.app.runtime.win-x86.10.0.0.nupkg.sha512",
-    "C:\\Users\\afvid\\.nuget\\packages\\microsoft.aspnetcore.app.runtime.win-x86\\10.0.0\\microsoft.aspnetcore.app.runtime.win-x86.10.0.0.nupkg.sha512"
+    "C:\\Users\\afvid\\.nuget\\packages\\system.serviceprocess.servicecontroller\\10.0.1\\system.serviceprocess.servicecontroller.10.0.1.nupkg.sha512"
   ],
   "logs": []
 }
