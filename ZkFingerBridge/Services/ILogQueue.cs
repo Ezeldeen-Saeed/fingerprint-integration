@@ -8,5 +8,6 @@ public interface ILogQueue
     Task<IReadOnlyList<QueuedLog>> GetPendingAsync(int maxRetryCount, CancellationToken cancellationToken = default);
     Task MarkAsSentAsync(int logId, CancellationToken cancellationToken = default);
     Task MarkAsFailedAsync(int logId, string error, CancellationToken cancellationToken = default);
+    Task IncreasePriorityAsync(int logId, CancellationToken cancellationToken = default);
     Task<int> GetPendingCountAsync(CancellationToken cancellationToken = default);
 }

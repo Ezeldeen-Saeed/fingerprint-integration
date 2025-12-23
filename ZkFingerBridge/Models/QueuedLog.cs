@@ -18,6 +18,7 @@ public class QueuedLog
     public string? LastError { get; set; }
     public QueueStatus Status { get; set; }
     public DateTime? SentAt { get; set; }
+    public int Priority { get; set; } = 0; // 0 = normal priority, higher values = lower priority (processed later)
 }
 
 public enum QueueStatus

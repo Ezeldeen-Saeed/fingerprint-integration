@@ -32,6 +32,7 @@ public class LogQueueDbContext : DbContext
             entity.HasIndex(e => e.Status);
             entity.HasIndex(e => e.QueuedAt);
             entity.HasIndex(e => new { e.Status, e.RetryCount });
+            entity.HasIndex(e => new { e.Status, e.Priority, e.QueuedAt }); // For priority-based queue processing
             
             entity.Property(e => e.EmployeeId)
                 .IsRequired()

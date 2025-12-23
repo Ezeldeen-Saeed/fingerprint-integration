@@ -20,6 +20,50 @@ public class SqliteLogQueue : ILogQueue
         // Ensure database and tables are created
         using var db = new LogQueueDbContext(_databasePath);
         db.Database.EnsureCreated();
+        
+        // Run migration to add Priority column if it doesn't exist (for existing databases)
+        MigrateDatabaseSchema(db);
+    }
+
+    /// <summary>
+    /// Migrates existing database schema to add new columns/indexes
+    /// </summary>
+    private void MigrateDatabaseSchema(LogQueueDbContext db)
+    {
+        try
+        {
+            // Check if Priority column exists
+            var tableInfo = db.Database.SqlQueryRaw<TableInfo>(
+                "PRAGMA table_info(QueuedLogs)").ToList();
+            
+            var hasPriorityColumn = tableInfo.Any(col => col.name == "Priority");
+            
+            if (!hasPriorityColumn)
+            {
+                _logger.LogInformation("Running database migration: Adding Priority column...");
+                
+                // Add Priority column with default value 0
+                db.Database.ExecuteSqlRaw(
+                    "ALTER TABLE QueuedLogs ADD COLUMN Priority INTEGER NOT NULL DEFAULT 0");
+                
+                // Create index for priority-based ordering
+                db.Database.ExecuteSqlRaw(
+                    @"CREATE INDEX IF NOT EXISTS IX_QueuedLogs_Status_Priority_QueuedAt 
+                      ON QueuedLogs(Status, Priority, QueuedAt)");
+                
+                _logger.LogInformation("✅ Database migration completed successfully");
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to migrate database schema. This may cause errors.");
+        }
+    }
+    
+    // Helper class for reading PRAGMA table_info
+    private class TableInfo
+    {
+        public string name { get; set; } = string.Empty;
     }
 
     public async Task EnqueueAsync(IEnumerable<AttendanceLog> logs, int branchId, CancellationToken cancellationToken = default)
@@ -51,7 +95,8 @@ public class SqliteLogQueue : ILogQueue
         
         return await db.QueuedLogs
             .Where(log => log.Status == QueueStatus.Pending && log.RetryCount < maxRetryCount)
-            .OrderBy(log => log.QueuedAt)
+            .OrderBy(log => log.Priority)  // Lower priority values first (0 = normal, higher = low priority)
+            .ThenBy(log => log.QueuedAt)   // Then by time queued
             .ToListAsync(cancellationToken);
     }
 
@@ -81,6 +126,22 @@ public class SqliteLogQueue : ILogQueue
             
             _logger.LogWarning("⚠️ Failed to send queued log {LogId} (retry {RetryCount}): {Error}", 
                 logId, log.RetryCount, error);
+        }
+    }
+
+    public async Task IncreasePriorityAsync(int logId, CancellationToken cancellationToken = default)
+    {
+        using var db = new LogQueueDbContext(_databasePath);
+        
+        var log = await db.QueuedLogs.FindAsync(new object[] { logId }, cancellationToken);
+        if (log != null)
+        {
+            log.Priority++;  // Increase priority value (moves to back of queue)
+            log.RetryCount++;
+            log.LastError = "Employee not found in HR system - will retry with low priority";
+            await db.SaveChangesAsync(cancellationToken);
+            
+            _logger.LogDebug("Moved log {LogId} to low priority (Priority={Priority})", logId, log.Priority);
         }
     }
 
