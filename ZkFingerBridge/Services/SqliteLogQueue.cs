@@ -129,7 +129,7 @@ public class SqliteLogQueue : ILogQueue
         }
     }
 
-    public async Task IncreasePriorityAsync(int logId, CancellationToken cancellationToken = default)
+    public async Task IncreasePriorityAsync(int logId, string reason, CancellationToken cancellationToken = default)
     {
         using var db = new LogQueueDbContext(_databasePath);
         
@@ -138,10 +138,11 @@ public class SqliteLogQueue : ILogQueue
         {
             log.Priority++;  // Increase priority value (moves to back of queue)
             log.RetryCount++;
-            log.LastError = "Employee not found in HR system - will retry with low priority";
+            log.LastError = reason;
             await db.SaveChangesAsync(cancellationToken);
             
-            _logger.LogDebug("Moved log {LogId} to low priority (Priority={Priority})", logId, log.Priority);
+            _logger.LogDebug("Moved log {LogId} to low priority (Priority={Priority}). Reason: {Reason}", 
+                logId, log.Priority, reason);
         }
     }
 
