@@ -37,6 +37,13 @@ public static class SettingsSaver
         {
             zkDevice["IpAddress"] = deviceIpAddress;
             zkDevice["EnableAutoDiscovery"] = false;
+            
+            // Auto-extract subnet from device IP (e.g., 192.168.1.100 -> 192.168.1)
+            var subnet = ExtractSubnet(deviceIpAddress);
+            if (!string.IsNullOrEmpty(subnet))
+            {
+                zkDevice["AutoDiscoverySubnet"] = subnet;
+            }
         }
 
         // Write back to file with proper formatting
@@ -47,6 +54,28 @@ public static class SettingsSaver
         };
         
         File.WriteAllText(appSettingsPath, jsonNode.ToJsonString(options));
+    }
+
+    /// <summary>
+    /// Extracts subnet (first 3 octets) from IP address
+    /// </summary>
+    private static string? ExtractSubnet(string ipAddress)
+    {
+        try
+        {
+            var parts = ipAddress.Trim().Split('.');
+            if (parts.Length == 4)
+            {
+                // Return first 3 octets (e.g., "192.168.1.100" -> "192.168.1")
+                return $"{parts[0]}.{parts[1]}.{parts[2]}";
+            }
+        }
+        catch
+        {
+            // Invalid IP format
+        }
+        
+        return null;
     }
 
     /// <summary>
