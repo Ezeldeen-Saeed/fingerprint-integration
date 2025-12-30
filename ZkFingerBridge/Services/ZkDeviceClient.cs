@@ -125,17 +125,44 @@ public sealed class ZkDeviceClient : IZkDeviceClient
         }
 
         _logger.LogInformation("Connecting to device at {Ip}:{Port}", _configHolder.IpAddress, _configHolder.Port);
-        if (!_zkem.Connect_Net(_configHolder.IpAddress, _configHolder.Port))
+        
+        // Disconnect first to avoid "already connected" errors
+        try
         {
-            throw new InvalidOperationException($"Connect_Net failed with error {GetLastError()}");
+            _zkem.Disconnect();
         }
-
+        catch
+        {
+            // Ignore disconnect errors
+        }
+        
+        // Set CommPassword BEFORE connecting (required by ZK SDK for some devices)
         if (_configHolder.CommPassword.HasValue)
         {
             _zkem.SetCommPassword(_configHolder.CommPassword.Value);
         }
+        
+        // Attempt connection
+        if (!_zkem.Connect_Net(_configHolder.IpAddress, _configHolder.Port))
+        {
+            var errorCode = GetLastError();
+            var errorMessage = errorCode switch
+            {
+                -7 => "Already connected or device in use by another application. Close other ZK software",
+                -6 => "Communication password wrong or device busy. Try CommPassword=null",
+                -5 => "Device not found. Check IP address",
+                -4 => "Incorrect port. Try 8089 instead of 4370",
+                -2 => "Connection timeout. Device offline or firewall blocking",
+                -8 => "Buffer overflow. Try reducing sync interval",
+                _ => $"Error code {errorCode}"
+            };
+            
+            _logger.LogError("❌ Connect_Net failed: {ErrorMessage}", errorMessage);
+            throw new InvalidOperationException($"Connect_Net failed with error {errorCode}: {errorMessage}");
+        }
 
         _connected = true;
+        _logger.LogInformation("✅ Successfully connected to device");
     }
 
     private bool TryReadSingleLog(out AttendanceLog log)
