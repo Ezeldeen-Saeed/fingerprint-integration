@@ -110,7 +110,14 @@ builder.Services
     .ValidateDataAnnotations()
     .ValidateOnStart();
 
+builder.Services
+    .AddOptions<DiscoveryOptions>()
+    .Bind(builder.Configuration.GetSection(DiscoveryOptions.SectionName))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+
 // Services
+builder.Services.AddSingleton<IDeviceRegistry, DeviceRegistry>(); // Register this FIRST
 builder.Services.AddSingleton<IDeviceConfigurationHolder, DeviceConfigurationHolder>();
 builder.Services.AddSingleton<IZkDeviceClient, ZkDeviceClient>();
 builder.Services.AddSingleton<IStateStore, FileStateStore>();
@@ -152,8 +159,11 @@ builder.Services.AddQuartzHostedService(options =>
     options.WaitForJobsToComplete = true; // Wait for jobs to finish on shutdown
 });
 
-// Add startup job for device discovery
-builder.Services.AddHostedService<StartupWorker>();
+// Add discovery worker for periodic device scanning
+builder.Services.AddHostedService<DiscoveryWorker>();
+
+// Disabled StartupWorker - DiscoveryWorker handles discovery now
+// builder.Services.AddHostedService<StartupWorker>();
 
 var host = builder.Build();
     host.Run();

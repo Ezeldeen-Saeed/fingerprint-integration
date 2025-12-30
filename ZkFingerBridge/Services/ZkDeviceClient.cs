@@ -14,11 +14,15 @@ public sealed class ZkDeviceClient : IZkDeviceClient
     private readonly dynamic _zkem;
     private bool _connected;
 
+    private readonly IDeviceRegistry _deviceRegistry;
+
     public ZkDeviceClient(
         IDeviceConfigurationHolder configHolder,
+        IDeviceRegistry deviceRegistry, // <--- Added dependency
         ILogger<ZkDeviceClient> logger)
     {
         _configHolder = configHolder;
+        _deviceRegistry = deviceRegistry;
         _logger = logger;
 
         var zkType = Type.GetTypeFromProgID("zkemkeeper.ZKEM")
@@ -37,9 +41,24 @@ public sealed class ZkDeviceClient : IZkDeviceClient
                 cancellationToken.ThrowIfCancellationRequested();
                 EnsureConnectedUnsafe();
 
-                var logs = new List<AttendanceLog>();
+                // Get current connection details (might be resolved from auto)
+                string currentIp = _configHolder.IpAddress;
+                int currentPort = _configHolder.Port;
+                
+                if (string.Equals(currentIp, "auto", StringComparison.OrdinalIgnoreCase))
+                {
+                    var devices = _deviceRegistry.GetDevices();
+                    if (devices.Count > 0)
+                    {
+                        var device = devices[0];
+                        currentIp = device.IpAddress;
+                        currentPort = device.Port;
+                    }
+                }
+
+                var logs = new List<AttendanceLog>(); // <--- Restored
                 _logger.LogInformation("Reading logs from device {Machine} ({Ip}:{Port})", 
-                    _configHolder.MachineNumber, _configHolder.IpAddress, _configHolder.Port);
+                    _configHolder.MachineNumber, currentIp, currentPort);
 
                 _zkem.EnableDevice(_configHolder.MachineNumber, false);
                 try
@@ -124,7 +143,26 @@ public sealed class ZkDeviceClient : IZkDeviceClient
             return;
         }
 
-        _logger.LogInformation("Connecting to device at {Ip}:{Port}", _configHolder.IpAddress, _configHolder.Port);
+        string targetIp = _configHolder.IpAddress;
+        int targetPort = _configHolder.Port;
+
+        // Resolve "auto" IP address
+        if (string.Equals(targetIp, "auto", StringComparison.OrdinalIgnoreCase))
+        {
+            if (!_deviceRegistry.HasDevices())
+            {
+                throw new InvalidOperationException("Configuration set to 'auto' but no devices have been discovered yet.");
+            }
+
+            var devices = _deviceRegistry.GetDevices();
+            var device = devices.First();
+            targetIp = device.IpAddress;
+            targetPort = device.Port; // Use discovered port
+            
+            _logger.LogInformation("Resolved 'auto' to {IP}:{Port}", targetIp, targetPort);
+        }
+
+        _logger.LogInformation("Connecting to device at {Ip}:{Port}...", targetIp, targetPort);
         
         // Disconnect first to avoid "already connected" errors
         try
@@ -143,7 +181,7 @@ public sealed class ZkDeviceClient : IZkDeviceClient
         }
         
         // Attempt connection
-        if (!_zkem.Connect_Net(_configHolder.IpAddress, _configHolder.Port))
+        if (!_zkem.Connect_Net(targetIp, targetPort))
         {
             var errorCode = GetLastError();
             var errorMessage = errorCode switch

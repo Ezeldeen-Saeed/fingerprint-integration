@@ -86,11 +86,10 @@ public class StartupWorker : BackgroundService
 
         if (deviceInfo != null)
         {
-            _logger.LogInformation("Auto-discovery successful! Updating device IP from {OldIP} to {NewIP} (S/N: {Serial}, Model: {Model})",
+            _logger.LogInformation("Auto-discovery successful! Updating device IP from {OldIP} to {NewIP} (S/N: {Serial})",
                 _deviceOptions.IpAddress,
                 deviceInfo.IpAddress,
-                deviceInfo.SerialNumber ?? "Unknown",
-                deviceInfo.DeviceModel ?? "Unknown");
+                deviceInfo.SerialNumber ?? "Unknown");
             
             // Update the shared configuration holder
             _configHolder.IpAddress = deviceInfo.IpAddress;

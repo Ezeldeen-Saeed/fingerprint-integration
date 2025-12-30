@@ -87,8 +87,8 @@ public class SetupWizard : Form
         // Device IP label
         var deviceIpLabel = new Label
         {
-            Text = "عنوان IP لجهاز البصمة:",
-            Location = new Point(265, 170),
+            Text = "عنوان IP لجهاز البصمة (اختياري):",
+            Location = new Point(200, 170),
             AutoSize = true
         };
         Controls.Add(deviceIpLabel);
@@ -99,7 +99,7 @@ public class SetupWizard : Form
             Location = new Point(30, 195),
             Size = new Size(380, 30),
             RightToLeft = RightToLeft.No, // IP addresses are LTR
-            PlaceholderText = "مثال: 192.168.1.100"
+            PlaceholderText = "اتركه فارغاً للاكتشاف التلقائي على الشبكة"
         };
         _deviceIpTextBox.TextChanged += DeviceIpTextBox_TextChanged;
         Controls.Add(_deviceIpTextBox);
@@ -233,12 +233,16 @@ public class SetupWizard : Form
 
     private void UpdateSaveButtonState()
     {
-        // Enable save button only when company, branch, and IP are all filled
+        // Enable save button when company and branch are selected
+        // IP is now optional - if empty, auto-discovery will be used
         var hasCompany = _companyCombo.SelectedItem != null;
         var hasBranch = _branchCombo.SelectedItem != null;
-        var hasIp = !string.IsNullOrWhiteSpace(_deviceIpTextBox.Text) && IsValidIpAddress(_deviceIpTextBox.Text);
         
-        _saveButton.Enabled = hasCompany && hasBranch && hasIp;
+        // IP is valid if empty (auto-discovery) or a valid IP address
+        var ipText = _deviceIpTextBox.Text?.Trim() ?? "";
+        var ipValid = string.IsNullOrWhiteSpace(ipText) || IsValidIpAddress(ipText);
+        
+        _saveButton.Enabled = hasCompany && hasBranch && ipValid;
     }
 
     private static bool IsValidIpAddress(string ip)
@@ -261,16 +265,32 @@ public class SetupWizard : Form
     private void SaveButton_Click(object? sender, EventArgs e)
     {
         if (_companyCombo.SelectedItem is ComboBoxItem company && 
-            _branchCombo.SelectedItem is ComboBoxItem branch &&
-            IsValidIpAddress(_deviceIpTextBox.Text))
+            _branchCombo.SelectedItem is ComboBoxItem branch)
         {
             SelectedCompanyId = company.Value;
             SelectedCompanyName = company.Text;
             SelectedBranchId = branch.Value;
             SelectedBranchName = branch.Text;
-            DeviceIpAddress = _deviceIpTextBox.Text.Trim();
-            ConfigurationSaved = true;
             
+            // IP is optional - if provided, validate it; if empty, use auto-discovery
+            var ipText = _deviceIpTextBox.Text?.Trim() ?? "";
+            if (!string.IsNullOrWhiteSpace(ipText) && IsValidIpAddress(ipText))
+            {
+                DeviceIpAddress = ipText;
+            }
+            else if (string.IsNullOrWhiteSpace(ipText))
+            {
+                // Empty IP = enable auto-discovery
+                DeviceIpAddress = null;
+            }
+            else
+            {
+                // Invalid IP format
+                MessageBox.Show("عنوان IP غير صحيح", "خطأ", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            
+            ConfigurationSaved = true;
             DialogResult = DialogResult.OK;
             Close();
         }
