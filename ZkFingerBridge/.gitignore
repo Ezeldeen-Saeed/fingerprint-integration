@@ -1,0 +1,13 @@
+bin/
+obj/
+.vs/
+.vscode/
+publish/
+installer-output/
+*.db
+*.db-shm
+*.db-wal
+*.log
+logs/
+appsettings.Development.json
+TestResults/
