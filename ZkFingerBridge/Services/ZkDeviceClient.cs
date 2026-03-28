@@ -18,7 +18,7 @@ public sealed class ZkDeviceClient : IZkDeviceClient
 
     public ZkDeviceClient(
         IDeviceConfigurationHolder configHolder,
-        IDeviceRegistry deviceRegistry, // <--- Added dependency
+        IDeviceRegistry deviceRegistry,
         ILogger<ZkDeviceClient> logger)
     {
         _configHolder = configHolder;
@@ -56,7 +56,7 @@ public sealed class ZkDeviceClient : IZkDeviceClient
                     }
                 }
 
-                var logs = new List<AttendanceLog>(); // <--- Restored
+                var logs = new List<AttendanceLog>();
                 _logger.LogInformation("Reading logs from device {Machine} ({Ip}:{Port})", 
                     _configHolder.MachineNumber, currentIp, currentPort);
 
