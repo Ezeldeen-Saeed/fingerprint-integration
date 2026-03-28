@@ -66,11 +66,17 @@ public sealed class ZkDeviceClient : IZkDeviceClient
                     if (!_zkem.ReadAllGLogData(_configHolder.MachineNumber))
                     {
                         var error = GetLastError();
-                        _logger.LogWarning("ReadAllGLogData returned false (error {ErrorCode})", error);
-                        if (error != 0)
+                        
+                        // Error -2 means "no data" / "data not found" - device has no log records
+                        // This is NOT a critical failure, just return empty list
+                        if (error == -2 || error == 0)
                         {
-                            throw new InvalidOperationException($"ReadAllGLogData failed with error {error}");
+                            _logger.LogInformation("No log data available on device (code {ErrorCode})", error);
+                            return (IReadOnlyCollection<AttendanceLog>)logs;
                         }
+                        
+                        _logger.LogWarning("ReadAllGLogData returned false (error {ErrorCode})", error);
+                        throw new InvalidOperationException($"ReadAllGLogData failed with error {error}");
                     }
 
                     while (TryReadSingleLog(out var log))

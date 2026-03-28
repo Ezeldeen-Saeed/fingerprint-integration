@@ -1,6 +1,8 @@
-## .NET Build Artifacts
+## Build Artifacts
 bin/
 obj/
+dist/
+payload/
 *.user
 *.suo
 *.cache

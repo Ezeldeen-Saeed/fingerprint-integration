@@ -23,5 +23,13 @@
     <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
   </ItemGroup>
+
+  <!-- Exclude the subproject and its artifacts from the main project -->
+  <ItemGroup>
+    <Compile Remove="InstallerWizard\**" />
+    <EmbeddedResource Remove="InstallerWizard\**" />
+    <None Remove="InstallerWizard\**" />
+  </ItemGroup>
+
 </Project>
 

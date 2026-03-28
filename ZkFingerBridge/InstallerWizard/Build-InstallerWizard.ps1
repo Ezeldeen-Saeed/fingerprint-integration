@@ -11,7 +11,7 @@ param(
 $ErrorActionPreference = "Stop"
 $ProjectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 $ZkFingerBridgeDir = Join-Path $ProjectRoot ".." 
-$OutputDir = Join-Path $ProjectRoot "bin\Release\net8.0-windows\win-x86\publish"
+$OutputDir = Join-Path $ProjectRoot "bin\Release\net10.0-windows\win-x86\publish"
 $PayloadDir = Join-Path $ProjectRoot "payload"
 
 Write-Host ""
