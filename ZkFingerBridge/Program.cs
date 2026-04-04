@@ -7,17 +7,12 @@ using ZkFingerBridge.Services;
 using ZkFingerBridge.UI;
 using Serilog;
 
-// Configure data directory in ProgramData
-var commonAppData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-var appDataDir = Path.Combine(commonAppData, "ZkFingerBridge");
-Directory.CreateDirectory(appDataDir);
-
 // Configure Serilog for file logging
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Information()
     .WriteTo.Console()
     .WriteTo.File(
-        path: Path.Combine(appDataDir, "logs", "log-.txt"),
+        path: Path.Combine(AppContext.BaseDirectory, "logs", "log-.txt"),
         rollingInterval: RollingInterval.Day,
         outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss} [{Level:u3}] {Message:lj}{NewLine}{Exception}")
     .CreateLogger();
@@ -112,16 +107,6 @@ builder.Services
 builder.Services
     .AddOptions<QueueOptions>()
     .Bind(builder.Configuration.GetSection("Queue"))
-    .PostConfigure(options => 
-    {
-        // Ensure database is stored in ProgramData, not Program Files
-        if (!Path.IsPathRooted(options.DatabasePath))
-        {
-            var commonAppData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-            var appDataDir = Path.Combine(commonAppData, "ZkFingerBridge");
-            options.DatabasePath = Path.Combine(appDataDir, options.DatabasePath);
-        }
-    })
     .ValidateDataAnnotations()
     .ValidateOnStart();
 

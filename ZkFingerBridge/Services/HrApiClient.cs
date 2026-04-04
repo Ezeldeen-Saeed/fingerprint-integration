@@ -47,7 +47,7 @@ public sealed class HrApiClient : IHrApiClient
             throw new ArgumentException("Cannot send empty log collection", nameof(logs));
         }
 
-        _logger.LogInformation("Sending {Count} logs to HR API", logs.Count);
+        _logger.LogInformation("Sending {Count} logs to HR API at {Endpoint}", logs.Count, _options.AttendanceEndpoint);
 
         // Build payload as array for batch endpoint
         var payload = logs.Select(log => new
@@ -67,7 +67,7 @@ public sealed class HrApiClient : IHrApiClient
         if (!response.IsSuccessStatusCode)
         {
             var body = await response.Content.ReadAsStringAsync(cancellationToken);
-            _logger.LogError("HR API error: {Status}", response.StatusCode);
+            _logger.LogError("HR API error: {Status} - {Body}", response.StatusCode, body);
             throw new InvalidOperationException($"HR API responded with {(int)response.StatusCode} - {response.ReasonPhrase}: {body}");
         }
 
@@ -89,7 +89,7 @@ public sealed class HrApiClient : IHrApiClient
 
     public async Task<CompaniesResponse?> GetCompaniesAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Fetching companies list");
+        _logger.LogInformation("Fetching companies from {Endpoint}", _options.CompaniesEndpoint);
         
         try
         {
