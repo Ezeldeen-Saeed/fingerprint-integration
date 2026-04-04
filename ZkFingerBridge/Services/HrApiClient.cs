@@ -25,6 +25,11 @@ public sealed class HrApiClient : IHrApiClient
         _deviceOptions = deviceOptions.Value;
         _logger = logger;
 
+        // Set required headers to avoid Cloudflare blocks
+        _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("ZkFingerBridge/2.0");
+        _httpClient.DefaultRequestHeaders.Accept.ParseAdd("application/json");
+        _httpClient.DefaultRequestHeaders.TryAddWithoutValidation("Content-Type", "application/json");
+
         // Log configuration values for debugging
         _logger.LogInformation("HrApiClient initialized - CompanyId: {CompanyId}, BranchId: {BranchId}", 
             _options.CompanyId, _deviceOptions.BranchId);
@@ -77,9 +82,16 @@ public sealed class HrApiClient : IHrApiClient
         {
             throw new InvalidOperationException("API returned empty response");
         }
+
+        // Debug: log raw response when Data is null to understand structure
+        if (result.Data == null)
+        {
+            var raw = await response.Content.ReadAsStringAsync(cancellationToken);
+            _logger.LogDebug("API response has null Data. Raw response: {Response}", raw);
+        }
         
         _logger.LogInformation("✅ Batch sent successfully: {Message} (Received: {Received}, Stored: {Stored}, Matched: {Matched})", 
-            result.Message, 
+            "Logs processed", 
             result.Data?.TotalReceived, 
             result.Data?.TotalStored,
             result.Data?.TotalMatched);
